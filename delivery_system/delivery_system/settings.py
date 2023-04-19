@@ -37,21 +37,32 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_yasg',
+    'oauth2_provider',
     'delivery.apps.DeliveryConfig',
     "cloudinary",
     "cloudinary_storage",
     'rest_framework',
-    'drf_yasg',
-    'oauth2_provider',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.MultiPartParser'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-    )
+    ]
+}
+
+OAUTH2_PROVIDER = {
+    # parses OAuth2 data from application/json requests
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'}
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,6 +71,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'delivery_system.urls'
 
@@ -168,4 +181,11 @@ JAZZMIN_SETTINGS = {
 
 JAZZMIN_UI_TWEAKS = {
     "theme": "sketchy",
+}
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+OAUTH2_INFO = {
+    'client_id': 'wMZEhrYJNVSTmmfq6hx9EEBc1e58l1byIlplt71s',
+    'client_secret': '5YValfdzkqQmZywd0eOPZGBtVvlRLGNAb2O2vkFJiU2W3qiPBCvN2rNdaY5fOihVaCLoOZhmHVPbyBtw92JND6vnv6m8KwuqZjNcSMB2qjmJNgky8S8gSACLr6D4cNgy',
 }

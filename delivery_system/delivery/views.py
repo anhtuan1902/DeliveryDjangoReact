@@ -1,18 +1,20 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, generics, status, parsers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Shipper, Discount, Order, Post, Auction, Comment, Rating, Admin, Customer, User
-from .serializers import DiscountSerializer, ShipperSerializer, UserSerializer, OrderSerializer, PostSerializer, \
+from .serializers import DiscountSerializer, UserSerializer, OrderSerializer, PostSerializer, \
     AuctionSerializer, CommentSerializer, RatingSerializer, AdminSerializer, CustomerSerializer, ShipperDetailSerializer
 from rest_framework import permissions
-import cloudinary.uploader
+from rest_framework.parsers import MultiPartParser
+from rest_framework.views import APIView
+
+from django.conf import settings
 
 
 class PostViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView,
-                  generics.CreateAPIView):
-    queryset = Post.objects.filter(active=True)
+                  generics.CreateAPIView, generics.RetrieveAPIView):
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, ]
 
     def get_queryset(self):
         post = Post.objects.filter(active=True)
@@ -21,37 +23,37 @@ class PostViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView
         if q is not None:
             post = post.filter(product_name__icontains=q)
 
-        post_id = self.request.query_params.get('id')
-        if post_id is not None:
-            post = post.filter(id=post_id)
-
         return post
 
-    @action(methods='get', detail=True, url_path='get-auction')
-    def get_auction(self, request, pk):
-        post_id = Post.objects.get(pk=pk)
-        auctions = post_id.auctions_post.filter(active=True)
-
-        return Response(AuctionSerializer(auctions, many=True).data, status=status.HTTP_200_OK)
+    def create(self, request, *args, **kwargs):
+        if request.user.user_role == "CUSTOMER_ROLE":
+            return super().create(request, *args, **kwargs)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     @action(methods=['post'], detail=True, url_path='add-auction')
     def add_auction(self, request, pk):
-        content = request.data.get('content')
-        if content:
-            auc = Auction.objects.create(content=content, delivery=request.user, post=self.get_object())
+        if request.user.user_role == "SHIPPER_ROLE":
+            content = request.data.get('content')
+            price = request.data.get('price')
+            shipper = Shipper.objects.filter(user__is_active=True)
 
-            return Response(AuctionSerializer(auc).data, status=status.HTTP_201_CREATED)
+            if content and price:
+                auc = Auction.objects.create(content=content, price=price, delivery=shipper.filter(user=request.user)[0],
+                                             post=self.get_object())
 
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(AuctionSerializer(auc).data, status=status.HTTP_201_CREATED)
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     def partial_update(self, request, *args, **kwargs):
-        if request.user == self.get_object().customer:
+        if request.user == self.get_object().customer.user:
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class AuctionViewSet(viewsets.ModelViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class AuctionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView):
     queryset = Auction.objects.filter(active=True)
     serializer_class = AuctionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -105,30 +107,52 @@ class OrderViewSet(viewsets.ViewSet, generics.UpdateAPIView):
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class UserViewSet(viewsets.ViewSet, generics.UpdateAPIView, generics.RetrieveAPIView):
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
+    parser_classes = [MultiPartParser, ]
 
-    @action(methods=['get'], detail=False, url_path='current-user')
-    def get_current_user(self, request):
-        return Response(self.serializer_class(request.user).data,
-                        status=status.HTTP_200_OK)
+    def get_permissions(self):
+        if self.action == 'current_user' or self.action == 'list':
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
+
+    @action(methods=['get', 'put'], detail=False, url_path='current-user')
+    def current_user(self, request):
+        u = request.user
+        if request.method.__eq__('PUT'):
+            for k, v in request.data.items():
+                if k.__eq__('password'):
+                    u.set_password(k)
+                else:
+                    setattr(u, k, v)
+            u.save()
+
+        return Response(UserSerializer(u, context={'request': request}).data)
 
 
-class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+    queryset = Shipper.objects.filter(user__is_active=True, user__user_role__icontains='SHIPPER_ROLE')
     serializer_class = ShipperDetailSerializer
+    parser_classes = [MultiPartParser, ]
 
-    def get_queryset(self):
-        shippers = Shipper.objects.filter(user__is_active=True, user__user_role__icontains='SHIPPER_ROLE')
+    def get_permissions(self):
+        if self.action == 'get_comment' or self.action == 'add_comment' \
+                or self.action == 'get_rate' or self.action == 'rate':
+            return [permissions.IsAuthenticated()]
 
+        return [permissions.AllowAny()]
+
+    def filter_queryset(self, queryset):
         CMND = self.request.query_params.get('q')
-        if CMND is not None:
-            shippers = shippers.filter(CMND__icontains=CMND)
+        if CMND:
+            queryset = queryset.filter(CMND__icontains=CMND)
 
-        shipper_id = self.request.query_params.get('shipper_id')
-        if shipper_id is not None:
-            shippers = shippers.filter(user__id=shipper_id)
-        return shippers
+        userid = self.request.query_params.get('userid')
+        if userid:
+            queryset = queryset.filter(user__id__icontains=userid)
+        return queryset
 
     @action(methods=['get'], detail=True, url_path='get-comment')
     def get_comment(self, request, pk):
@@ -171,11 +195,42 @@ class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAP
                 return Response(RatingSerializer(rating).data, status=status.HTTP_200_OK)
 
 
-class AdminViewSet(viewsets.ViewSet, generics.CreateAPIView):
+class AdminViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Admin.objects.filter(user__is_active=True, user__user_role__icontains='ADMIN_ROLE')
     serializer_class = AdminSerializer
+    parser_classes = [MultiPartParser, ]
+
+    def filter_queryset(self, queryset):
+        userid = self.request.query_params.get('userid')
+        if userid:
+            queryset = queryset.filter(user__id__icontains=userid)
+        return queryset
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
 
 
-class CustomerViewSet(viewsets.ViewSet, generics.CreateAPIView):
+class CustomerViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Customer.objects.filter(user__is_active=True, user__user_role__icontains='CUSTOMER_ROLE')
     serializer_class = CustomerSerializer
+    parser_classes = [MultiPartParser, ]
+
+    def filter_queryset(self, queryset):
+        userid = self.request.query_params.get('userid')
+        if userid:
+            queryset = queryset.filter(user__id__icontains=userid)
+        return queryset
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
+
+
+class AuthInfo(APIView):
+    def get(self, request):
+        return Response(settings.OAUTH2_INFO, status=status.HTTP_200_OK)

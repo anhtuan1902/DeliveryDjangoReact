@@ -80,7 +80,7 @@ class Order(BaseModel):
         ("DELIVERING", 'DELIVERING'),
         ('RECEIVED', 'RECEIVED')
     )
-
+    amount = models.FloatField(null=False, default=0)
     status_order = models.CharField(max_length=12, choices=STATUS, default='CONFIRM')
     auction = models.ForeignKey('Auction', related_name='order_auction', on_delete=models.CASCADE)
     shipper = models.ForeignKey(Shipper, related_name='order_shipper', on_delete=models.CASCADE)
@@ -104,6 +104,7 @@ class Post(BaseModel):
 
 class Auction(BaseModel):
     content = models.CharField(max_length=525)
+    price = models.FloatField(default=0, null=False)
     delivery = models.ForeignKey(Shipper, related_name='auctions_delivery', on_delete=models.CASCADE)
     post = models.ForeignKey(Post, related_name='auctions_post', on_delete=models.CASCADE)
     had_accept = models.BooleanField(default=False)

@@ -20,8 +20,6 @@ class UserSerializer(ModelSerializer):
 
 
 class ShipperSerializer(ModelSerializer):
-    user = UserSerializer()
-
     class Meta:
         model = Shipper
         fields = ['id', 'avatar', 'CMND', 'already_verify', 'user']
@@ -30,47 +28,32 @@ class ShipperSerializer(ModelSerializer):
         }
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User(**user_data)
-        user.set_password(user_data['password'])
-        user.save()
-        shipper = Shipper(user=user, **validated_data)
+        shipper = Shipper(**validated_data)
         shipper.save()
 
         return shipper
 
 
 class AdminSerializer(ModelSerializer):
-    user = UserSerializer()
 
     class Meta:
         model = Admin
         fields = ['id', 'avatar', 'user']
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User(**user_data)
-        user.set_password(user_data['password'])
-        user.save()
-        admin = Admin(user=user, **validated_data)
+        admin = Admin(**validated_data)
         admin.save()
 
         return admin
 
 
 class CustomerSerializer(ModelSerializer):
-    user = UserSerializer()
-
     class Meta:
         model = Customer
         fields = ['id', 'avatar', 'user']
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User(**user_data)
-        user.set_password(user_data['password'])
-        user.save()
-        customer = Customer(user=user, **validated_data)
+        customer = Customer(**validated_data)
         customer.save()
 
         return customer
@@ -93,29 +76,25 @@ class ShipperDetailSerializer(ShipperSerializer):
 
 
 class DiscountSerializer(ModelSerializer):
-    admin = AdminSerializer()
-
     class Meta:
         model = Discount
         fields = ['id', 'discount_title', 'discount_percent', 'admin', 'active', 'created_date']
 
 
 class PostSerializer(ModelSerializer):
-    customer = CustomerSerializer()
-    discount = DiscountSerializer()
-
     class Meta:
         model = Post
-        fields = ['id', 'product_name', 'img', 'from_address', 'to_address', 'description',
-                  'discount', 'customer', 'active']
+        fields = ['id', 'product_name', 'product_img', 'from_address', 'to_address', 'description',
+                  'discount', 'customer', 'active', 'created_date', 'updated_date']
 
 
 class AuctionSerializer(ModelSerializer):
     post = PostSerializer()
+    delivery = ShipperSerializer()
 
     class Meta:
         model = Auction
-        fields = ['id', 'content', 'delivery', 'post', 'had_accept']
+        fields = ['id', 'content', 'delivery', 'post', 'had_accept', 'price']
 
 
 class CommentSerializer(ModelSerializer):

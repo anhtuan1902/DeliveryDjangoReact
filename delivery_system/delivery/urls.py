@@ -17,5 +17,5 @@ router.register('comments', views.CommentViewSet, 'comment')
 
 urlpatterns = [
     path('', include(router.urls)),
-
+    path('oauth2-info/', views.AuthInfo.as_view())
 ]

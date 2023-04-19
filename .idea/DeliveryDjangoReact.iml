@@ -7,4 +7,7 @@
     <orderEntry type="jdk" jdkName="Python 3.11 (DeliveryDjangoReact)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="C:\BTL\DeliveryDjangoReact\delivery_system" />
+  </component>
 </module>
