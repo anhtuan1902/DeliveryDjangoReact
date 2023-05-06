@@ -56,7 +56,7 @@ class Shipper(models.Model):
 class BaseModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True )
 
     class Meta:
         abstract = True
@@ -84,6 +84,7 @@ class Order(BaseModel):
     status_order = models.CharField(max_length=12, choices=STATUS, default='CONFIRM')
     auction = models.ForeignKey('Auction', related_name='order_auction', on_delete=models.CASCADE)
     shipper = models.ForeignKey(Shipper, related_name='order_shipper', on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, related_name='order_customer', on_delete=models.SET_DEFAULT, default=None)
 
 
 class Post(BaseModel):
@@ -96,7 +97,7 @@ class Post(BaseModel):
     customer = models.ForeignKey(Customer, related_name='posts_customer', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.title
+        return self.product_name
 
     def img(self):
         return mark_safe('<img src="{}" width="100" alt="product_img"/>'.format(self.product_img.url))
@@ -108,6 +109,9 @@ class Auction(BaseModel):
     delivery = models.ForeignKey(Shipper, related_name='auctions_delivery', on_delete=models.CASCADE)
     post = models.ForeignKey(Post, related_name='auctions_post', on_delete=models.CASCADE)
     had_accept = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('delivery', 'post')
 
 
 class Comment(BaseModel):
@@ -126,3 +130,6 @@ class Rating(BaseModel):
 
     def __str__(self):
         return self.rate
+
+    class Meta:
+        unique_together = ('creator', 'shipper')

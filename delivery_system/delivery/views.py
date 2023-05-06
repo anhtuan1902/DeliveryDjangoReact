@@ -12,12 +12,13 @@ from django.conf import settings
 
 
 class PostViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView,
-                  generics.CreateAPIView, generics.RetrieveAPIView):
+                  generics.CreateAPIView):
     serializer_class = PostSerializer
     parser_classes = [MultiPartParser, ]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        post = Post.objects.filter(active=True)
+        post = Post.objects.all()
 
         q = self.request.query_params.get('q')
         if q is not None:
@@ -30,38 +31,48 @@ class PostViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView
             return super().create(request, *args, **kwargs)
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    @action(methods=['post'], detail=True, url_path='add-auction')
-    def add_auction(self, request, pk):
-        if request.user.user_role == "SHIPPER_ROLE":
-            content = request.data.get('content')
-            price = request.data.get('price')
-            shipper = Shipper.objects.filter(user__is_active=True)
-
-            if content and price:
-                auc = Auction.objects.create(content=content, price=price, delivery=shipper.filter(user=request.user)[0],
-                                             post=self.get_object())
-
-                return Response(AuctionSerializer(auc).data, status=status.HTTP_201_CREATED)
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
     def partial_update(self, request, *args, **kwargs):
         if request.user == self.get_object().customer.user:
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
 
+    @action(methods=['post'], detail=True, url_path='auctions')
+    def auctions(self, request, pk):
+        if request.user.user_role == 'SHIPPER_ROLE':
+            post = Post.objects.get(pk=pk)
+            delivery = Shipper.objects.get(user=request.user.id)
+            a, _ = Auction.objects.get_or_create(post=post, delivery=delivery)
+            if _:
+                a.content = request.data['content']
+                a.price = request.data['price']
+            elif not a.active:
+                    a.content = request.data['content']
+                    a.price = request.data['price']
+                    a.active = True
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            a.save()
+            return Response(AuctionSerializer(a, context={'request': request}).data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
-class AuctionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView, generics.CreateAPIView):
+
+class AuctionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView):
     queryset = Auction.objects.filter(active=True)
     serializer_class = AuctionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def partial_update(self, request, *args, **kwargs):
-        if request.user == self.get_object().customer:
-            return super().partial_update(request, *args, **kwargs)
-
+    @action(methods=['post'], detail=True, url_path='orders')
+    def orders(self, request, pk):
+        if request.user.user_role == 'CUSTOMER_ROLE':
+            auction = Auction.objects.get(pk=pk)
+            delivery = Shipper.objects.get(pk=request.data['delivery'])
+            customer = Customer.objects.get(pk=request.data['customer'])
+            o = Order.objects.create(auction=auction, shipper=delivery, customer=customer)
+            o.amount = request.data['amount']
+            o.active = True
+            o.save()
+            return Response(OrderSerializer(o, context={'request': request}).data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 
@@ -77,7 +88,7 @@ class DiscountViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPI
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     def partial_update(self, request, *args, **kwargs):
-        if request.user == self.get_object().admin:
+        if request.user == self.get_object().admin.user:
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
@@ -89,28 +100,34 @@ class CommentViewSet(viewsets.ViewSet, generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def partial_update(self, request, *args, **kwargs):
-        if request.user == self.get_object().creator:
+        if request.user == self.get_object().creator.user:
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class OrderViewSet(viewsets.ViewSet, generics.UpdateAPIView):
+class RateViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Rating.objects.filter()
+    serializer_class = RatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class OrderViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIView):
     queryset = Order.objects.filter(active=True)
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def partial_update(self, request, *args, **kwargs):
-        if request.user == self.get_object().shipper:
+        if request.user == self.get_object().shipper.user or request.user.user_role == "ADMIN_ROLE":
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.RetrieveAPIView, generics.ListAPIView):
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIView, generics.RetrieveAPIView,
+                  generics.ListAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
-    parser_classes = [MultiPartParser, ]
 
     def get_permissions(self):
         if self.action == 'current_user' or self.action == 'list':
@@ -132,17 +149,11 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.UpdateAPIVi
         return Response(UserSerializer(u, context={'request': request}).data)
 
 
-class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView):
+class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView, generics.UpdateAPIView,
+                     generics.RetrieveAPIView):
     queryset = Shipper.objects.filter(user__is_active=True, user__user_role__icontains='SHIPPER_ROLE')
     serializer_class = ShipperDetailSerializer
     parser_classes = [MultiPartParser, ]
-
-    def get_permissions(self):
-        if self.action == 'get_comment' or self.action == 'add_comment' \
-                or self.action == 'get_rate' or self.action == 'rate':
-            return [permissions.IsAuthenticated()]
-
-        return [permissions.AllowAny()]
 
     def filter_queryset(self, queryset):
         CMND = self.request.query_params.get('q')
@@ -154,22 +165,34 @@ class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIV
             queryset = queryset.filter(user__id__icontains=userid)
         return queryset
 
+    def partial_update(self, request, *args, **kwargs):
+        if request.user.user_role == "ADMIN_ROLE":
+            return super().partial_update(request, *args, **kwargs)
+
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    def get_permissions(self):
+        if self.action in ['get_comment', 'comments', 'get_rate', 'rate']:
+            return [permissions.IsAuthenticated()]
+
+        return [permissions.AllowAny()]
+
     @action(methods=['get'], detail=True, url_path='get-comment')
     def get_comment(self, request, pk):
         shipper_id = Shipper.objects.get(pk=pk)
-        comments = shipper_id.comments_shipper.filter()
+        comments = shipper_id.comments_shipper.filter(active=True)
 
         return Response(CommentSerializer(comments, many=True).data, status=status.HTTP_200_OK)
 
-    @action(methods=['post'], detail=True, url_path='add-comment')
-    def add_comment(self, request, pk):
-        content = request.data.get('content')
-        if content:
-            c = Comment.objects.create(content=content, creator=request.user, shipper=self.get_object())
-
-            return Response(CommentSerializer(c).data, status=status.HTTP_201_CREATED)
-
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    @action(methods=['post'], detail=True, url_path='comments')
+    def comments(self, request, pk):
+        if request.user.user_role == 'CUSTOMER_ROLE':
+            shipper = Shipper.objects.get(pk=pk)
+            customer = Customer.objects.get(user=request.user.id)
+            c = Comment(content=request.data['content'], shipper=shipper, creator=customer)
+            c.save()
+            return Response(CommentSerializer(c, context={'request': request}).data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     @action(methods=['get'], detail=True, url_path='get-rate')
     def get_rate(self, request, pk):
@@ -180,19 +203,15 @@ class ShipperViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIV
 
     @action(methods=['post'], detail=True, url_path='rating')
     def rate(self, request, pk):
-        rating = request.data.get('rate')
-        if rating:
-            try:
-                rating = Rating.objects.update_or_create(creator=request.user, book=self.get_object(), defaults={
-                    'rate': rating
-                })
-            except:
-                rate = Rating.objects.get(creator=request.user, book=self.get_object())
-                rate.rate = rating
-                rate.save()
-                return Response(RatingSerializer(rate).data, status=status.HTTP_200_OK)
-            else:
-                return Response(RatingSerializer(rating).data, status=status.HTTP_200_OK)
+        if request.user.user_role == 'CUSTOMER_ROLE':
+            shipper = Shipper.objects.get(pk=pk)
+            customer = Customer.objects.get(user=request.user.id)
+            r, _ = Rating.objects.get_or_create(shipper=shipper, creator=customer)
+            r.rate = request.data['rate']
+            r.save()
+
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 class AdminViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):

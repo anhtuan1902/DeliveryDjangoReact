@@ -7,6 +7,7 @@ router = DefaultRouter()
 
 router.register('posts', views.PostViewSet, 'post')
 router.register('discounts', views.DiscountViewSet, 'discount')
+router.register('rate', views.RateViewSet, 'rate')
 router.register('shippers', views.ShipperViewSet, 'shipper')
 router.register('customers', views.CustomerViewSet, 'customer')
 router.register('admins', views.AdminViewSet, 'admin')

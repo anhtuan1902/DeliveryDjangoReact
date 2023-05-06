@@ -60,25 +60,16 @@ class CustomerSerializer(ModelSerializer):
 
 
 class ShipperDetailSerializer(ShipperSerializer):
-    rate = serializers.SerializerMethodField()
-
-    def get_rate(self, shipper):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            r = shipper.rating.filter(creator=request.user).first()
-            if r:
-                return r.rate
-        return -1
 
     class Meta:
         model = ShipperSerializer.Meta.model
-        fields = ShipperSerializer.Meta.fields + ['rate']
+        fields = ShipperSerializer.Meta.fields
 
 
 class DiscountSerializer(ModelSerializer):
     class Meta:
         model = Discount
-        fields = ['id', 'discount_title', 'discount_percent', 'admin', 'active', 'created_date']
+        fields = ['id', 'discount_title', 'discount_percent', 'admin', 'active']
 
 
 class PostSerializer(ModelSerializer):
@@ -89,37 +80,26 @@ class PostSerializer(ModelSerializer):
 
 
 class AuctionSerializer(ModelSerializer):
-    post = PostSerializer()
-    delivery = ShipperSerializer()
-
     class Meta:
         model = Auction
-        fields = ['id', 'content', 'delivery', 'post', 'had_accept', 'price']
+        fields = ['id', 'content', 'delivery', 'post', 'had_accept', 'price', 'active']
 
 
 class CommentSerializer(ModelSerializer):
-    creator = CustomerSerializer()
-    shipper = ShipperSerializer()
-
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'shipper', 'creator']
+        fields = ['id', 'content', 'shipper', 'creator', 'active', 'created_date', 'updated_date']
 
 
 class RatingSerializer(ModelSerializer):
-    creator = CustomerSerializer()
-    shipper = ShipperSerializer()
-
     class Meta:
         model = Rating
         fields = ['id', 'rate', 'shipper', 'creator']
 
 
 class OrderSerializer(ModelSerializer):
-    shipper = ShipperSerializer()
-    auction = AuctionSerializer()
 
     class Meta:
         model = Order
-        fields = ['id', 'status_order', 'auction', 'shipper', 'created_date', 'updated_date']
+        fields = ['id', 'status_order', 'amount', 'auction', 'shipper', 'customer', 'active', 'created_date', 'updated_date']
 

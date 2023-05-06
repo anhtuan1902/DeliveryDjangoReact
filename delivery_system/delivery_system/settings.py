@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.MultiPartParser'
+        'rest_framework.parsers.MultiPartParser',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
@@ -186,6 +186,6 @@ JAZZMIN_UI_TWEAKS = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OAUTH2_INFO = {
-    'client_id': 'wMZEhrYJNVSTmmfq6hx9EEBc1e58l1byIlplt71s',
-    'client_secret': '5YValfdzkqQmZywd0eOPZGBtVvlRLGNAb2O2vkFJiU2W3qiPBCvN2rNdaY5fOihVaCLoOZhmHVPbyBtw92JND6vnv6m8KwuqZjNcSMB2qjmJNgky8S8gSACLr6D4cNgy',
+    'client_id': 'xjIkQ4rfoAkqC1AyFWDwNZRwFUf2YHjdtnOYRO4x',
+    'client_secret': 'itMyHUiZ7CBmw4RVsqUJORBkFlxZO5n5KJ8Khtkjn5aAckfOFobs0cy6p5zXsD3oIpzcklQDsxeRhrk7ZDQIEDt8jizPEf0qpP8j8Xmc1feigyUFUgmGE3jqQVcyyvy9',
 }
