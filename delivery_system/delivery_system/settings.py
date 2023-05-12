@@ -194,3 +194,10 @@ OAUTH2_INFO = {
     'client_id': 'xjIkQ4rfoAkqC1AyFWDwNZRwFUf2YHjdtnOYRO4x',
     'client_secret': 'itMyHUiZ7CBmw4RVsqUJORBkFlxZO5n5KJ8Khtkjn5aAckfOFobs0cy6p5zXsD3oIpzcklQDsxeRhrk7ZDQIEDt8jizPEf0qpP8j8Xmc1feigyUFUgmGE3jqQVcyyvy9',
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "testcode190201@gmail.com"
+EMAIL_HOST_PASSWORD = "nscihqbdcjcsdqbz"

@@ -42,7 +42,7 @@ const ShowHome = () => {
         <Sidebar />
       </div>}
       {toggle && <div className='col-4 col-md-2'></div>}
-      <div className='col vh-100' style={{backgroundColor: "#E0EAFC"}}>
+      <div className='col' style={{backgroundColor: "#E0EAFC"}}>
         <div className='px-3'>
           <Header Toggle={Toggle} />
           <div className="d-flex align-items-center flex-column">

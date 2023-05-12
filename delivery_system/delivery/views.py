@@ -7,7 +7,8 @@ from .serializers import DiscountSerializer, UserSerializer, OrderSerializer, Po
 from rest_framework import permissions
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
-
+from django.conf import settings
+from django.core.mail import send_mail
 from django.conf import settings
 
 
@@ -72,6 +73,13 @@ class AuctionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIV
             o.amount = request.data['amount']
             o.active = True
             o.save()
+
+            subject = 'XÁc NHẬN ĐƠN HÀNG'
+            message = f'Chào {delivery.user.last_name},\nĐơn hàng bạn đấu giá đã được xác nhận vui lòng thực hiện đơn hàng.\nCám ơn,\n{customer.user.last_name}'
+            email_from = settings.EMAIL_HOST_USER
+            recipient_list = [delivery.user.email, ]
+            send_mail(subject, message, email_from, recipient_list)
+
             return Response(OrderSerializer(o, context={'request': request}).data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_403_FORBIDDEN)
 

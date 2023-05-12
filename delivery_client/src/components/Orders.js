@@ -121,7 +121,7 @@ function Orders() {
           <Sidebar />
         </div>}
         {toggle && <div className='col-4 col-md-2'></div>}
-        <div className='col vh-100' style={{backgroundColor: "#E0EAFC"}}>
+        <div className='col vh-100' style={{ backgroundColor: "#E0EAFC" }}>
           <div className='px-3'>
             <Header Toggle={Toggle} />
             <div className="d-flex align-items-center flex-column">
@@ -142,31 +142,34 @@ function Orders() {
                     </tr>
                   </thead>
                   <tbody className='text-center'>
-                    {listOrder.filter(o => o.shipper === info.id && o.status_order === 'DELIVERING' || o.status_order === 'CONFIRM').map(o =>
-                      <tr key={o.id}>
-                        <td className='pt-3'>{o.id}</td>
-                        {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
-                        <td className='pt-3'>
-                          {o.amount}
-                        </td>
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
-                        <td className='pt-3'>
-                          <Form.Select value={statusOrder} onChange={(evt) => setStatusOrder(evt.target.value)}>
-                            {o.status_order === 'CONFIRM' ? <option>Xác nhận</option> : <option>Đang giao hàng</option>}
-                            <option value="CANCEL">Hủy</option>
-                            <option value="CONFIRM">Xác nhận</option>
-                            <option value="DELIVERING">Đang giao hàng</option>
-                            <option value="RECEIVED">Đã giao hàng</option>
-                          </Form.Select>
-                        </td>
-                        <td className='pt-3'>
-                          {o.updated_date}
-                        </td>
-                        <td className='pt-3'>
-                          <Button variant="outline-success" onClick={() => changeStatus(o.id)}>Xác nhận</Button>
-                        </td>
-                      </tr>
+                    {listOrder.filter(o => o.status_order === 'DELIVERING' || o.status_order === 'CONFIRM').map(o => {
+                      return (
+                        o.shipper === info.id ? <tr key={o.id}>
+                          <td className='pt-3'>{o.id}</td>
+                          {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
+                          <td className='pt-3'>
+                            {o.amount}
+                          </td>
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
+                          <td className='pt-3'>
+                            <Form.Select value={statusOrder} onChange={(evt) => setStatusOrder(evt.target.value)}>
+                              {o.status_order === 'CONFIRM' ? <option>Xác nhận</option> : <option>Đang giao hàng</option>}
+                              <option value="CANCEL">Hủy</option>
+                              <option value="CONFIRM">Xác nhận</option>
+                              <option value="DELIVERING">Đang giao hàng</option>
+                              <option value="RECEIVED">Đã giao hàng</option>
+                            </Form.Select>
+                          </td>
+                          <td className='pt-3'>
+                            {o.updated_date}
+                          </td>
+                          <td className='pt-3'>
+                            <Button variant="outline-success" onClick={() => changeStatus(o.id)}>Xác nhận</Button>
+                          </td>
+                        </tr> : <></>
+                      )
+                    }
                     )}
                   </tbody>
                 </Table>
@@ -186,23 +189,26 @@ function Orders() {
                     </tr>
                   </thead>
                   <tbody className='text-center'>
-                    {listOrder.filter(o => o.shipper === info.id && o.status_order === 'CANCEL' || o.status_order === 'RECEIVED').map(o =>
-                      <tr key={o.id}>
-                        <td className='pt-3'>{o.id}</td>
-                        {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
-                        <td className='pt-3'>
-                          {o.amount}
-                        </td>
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
-                        <td className='pt-3'>
-                          {o.status_order === 'RECEIVED' ? <option>Đã giao hàng</option> : <option>Hủy</option>}
-                        </td>
-                        <td className='pt-3'>
-                          {o.updated_date}
-                        </td>
+                    {listOrder.filter(o => o.status_order === 'CANCEL' || o.status_order === 'RECEIVED').map(o => {
+                      return (
+                        o.shipper === info.id ? <tr key={o.id}>
+                          {console.log(o.shipper)}
+                          <td className='pt-3'>{o.id}</td>
+                          {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
+                          <td className='pt-3'>
+                            {o.amount}
+                          </td>
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
+                          <td className='pt-3'>
+                            {o.status_order === 'RECEIVED' ? <option>Đã giao hàng</option> : <option>Hủy</option>}
+                          </td>
+                          <td className='pt-3'>
+                            {o.updated_date}
+                          </td>
 
-                      </tr>
+                        </tr> : <></>)
+                    }
                     )}
                   </tbody>
                 </Table>
@@ -221,7 +227,7 @@ function Orders() {
           <Sidebar />
         </div>}
         {toggle && <div className='col-4 col-md-2'></div>}
-        <div className='col vh-100' style={{backgroundColor: "#E0EAFC"}}>
+        <div className='col vh-100' style={{ backgroundColor: "#E0EAFC" }}>
           <div className='px-3'>
             <Header Toggle={Toggle} />
             <div className="d-flex align-items-center flex-column" >
@@ -241,23 +247,26 @@ function Orders() {
                     </tr>
                   </thead>
                   <tbody className='text-center'>
-                    {listOrder.filter(o => o.customer === info.id).map(o =>
-                      <tr key={o.id}>
-                        <td className='pt-3'>{o.id}</td>
-                        {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
-                        <td className='pt-3'>
-                          {o.amount}
-                        </td>
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
-                        {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
+                    {listOrder.map(o => {
+                      return (
+                        o.customer === info.id ? <tr key={o.id}>
+                          <td className='pt-3'>{o.id}</td>
+                          {auctions.filter(a => a.id === o.auction).map(a => <td className='pt-3'>{a.post}</td>)}
+                          <td className='pt-3'>
+                            {o.amount}
+                          </td>
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
+                          {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
 
-                        {o.status_order === 'CONFIRM' ? <td className='pt-3'>Xác nhận</td> : o.status_order === 'DELIVERING' ? <td className='pt-3'>Đang giao hàng</td> :
-                          o.status_order === 'RECEIVED' ? <td className='pt-3'>Đã giao hàng</td> : <td className='pt-3'>Hủy</td>}
+                          {o.status_order === 'CONFIRM' ? <td className='pt-3'>Xác nhận</td> : o.status_order === 'DELIVERING' ? <td className='pt-3'>Đang giao hàng</td> :
+                            o.status_order === 'RECEIVED' ? <td className='pt-3'>Đã giao hàng</td> : <td className='pt-3'>Hủy</td>}
 
-                        <td className='pt-3'>
-                          {o.updated_date}
-                        </td>
-                      </tr>
+                          <td className='pt-3'>
+                            {o.updated_date}
+                          </td>
+                        </tr> : <></>
+                      )
+                    }
                     )}
                   </tbody>
                 </Table>
@@ -276,7 +285,7 @@ function Orders() {
           <Sidebar />
         </div>}
         {toggle && <div className='col-4 col-md-2'></div>}
-        <div className='col vh-100' style={{backgroundColor: "#E0EAFC"}} >
+        <div className='col vh-100' style={{ backgroundColor: "#E0EAFC" }} >
           <div className='px-3'>
             <Header Toggle={Toggle} />
             <div className="d-flex align-items-center flex-column">
@@ -335,7 +344,8 @@ function Orders() {
 
   return (
     <div className='container-fluid bg-light min-vh-100'>
-      {!loading && user.user_role === "SHIPPER_ROLE" ? <ShowShipper  /> : !loading && user.user_role === "CUSTOMER_ROLE" ? <ShowCustomer  /> : !loading && user.user_role === "ADMIN_ROLE" ? <ShowAdmin /> : <Loading />}
+
+      {!loading && user.user_role === "SHIPPER_ROLE" ? <ShowShipper /> : !loading && user.user_role === "CUSTOMER_ROLE" ? <ShowCustomer /> : !loading && user.user_role === "ADMIN_ROLE" ? <ShowAdmin /> : <Loading />}
     </div>
   )
 }

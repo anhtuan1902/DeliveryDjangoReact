@@ -259,7 +259,7 @@ const Poster = () => {
         <>
             {user.user_role === 'CUSTOMER_ROLE' ? <h2 className='py-3 text-danger'>Bạn muốn giao những gì</h2> : <h2 className='py-3 text-danger'>Những món hàng cần bạn giao</h2>}
             {user.user_role === 'CUSTOMER_ROLE' ?
-                <div className="bg-white p-3 mt-3 rounded border shadow" style={{ width: "70%" }} >
+                <div className="bg-white p-3 mt-3 rounded border shadow" style={{ width: "80%" }} >
                     <div className="d-flex" type="button">
                         <div className="p-1">
                             <img src={infoUser.avatar} alt="avatar"
@@ -347,7 +347,7 @@ const Poster = () => {
                 </div> : <></>}
             {posters.filter(p => p.active === true).map(p => {
                 return (
-                    <div className="bg-white p-4 rounded shadow mt-4" key={p.id} style={{ width: "70%" }}>
+                    <div className="bg-white p-4 rounded shadow my-5" key={p.id} style={{ width: "80%" }}>
                         <div className="d-flex justify-content-between">
                             <div className="d-flex">
                                 {listCustomer.filter(c => c.id === p.customer).map(c => <img src={c.avatar} alt="avatar" className="rounded-circle me-2" style={{ width: "38px", height: "38px", objectFit: "cover" }} />)}
@@ -370,7 +370,7 @@ const Poster = () => {
                             }
 
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-4">
                             <div>
                                 <p>{p.product_name}</p>
                                 <p>Vận chuyển từ: {p.from_address} <VscIndent /> {p.to_address}</p>
@@ -378,7 +378,7 @@ const Poster = () => {
                                 {p.description ? <p>{p.description}</p> : <p></p>}
                                 <p>Các bạn hãy ra giá $$$ </p>
                                 <img src={p.product_img} alt={p.product_name}
-                                    className="img-fluid rounded align-items-center w-100" />
+                                    className="img-fluid rounded align-items-center w-100" style={{height:"600px"}} />
                             </div>
                             <div className="post__comment mt-3 position-relative">
                                 <div className="accordion" id="accordionExample">
@@ -411,7 +411,7 @@ const Poster = () => {
                                                                             Giá đưa ra: {a.price}
                                                                         </p>
                                                                     </div>
-                                                                    <Button variant="outline-secondary" disabled={false} onClick={() => addOrders(p, a)}>Chọn</Button>
+                                                                    {p.customer === infoUser.id ? <Button variant="outline-secondary" disabled={false} onClick={() => addOrders(p, a)}>Chọn</Button> : <></>}
                                                                 </div>
                                                             )
                                                         }) :

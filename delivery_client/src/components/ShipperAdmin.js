@@ -96,37 +96,6 @@ function ShipperAdmin() {
                         <div className="d-flex align-items-center flex-column">
                             <h1 className="text-danger text-center">QUẢN TRỊ NHÂN VIÊN GIAO HÀNG</h1>
                             <div className="bg-white p-4 rounded shadow mt-4" style={{ width: "70%" }}>
-                                <h3 class="text-center pb-4">Danh sách tất cả nhân viên giao hàng</h3>
-                                <Table striped bordered hover>
-                                    <thead className='text-center'>
-                                        <tr>
-                                            <th>Id</th>
-                                            <th>Tên nhân viên</th>
-                                            <th>Hình ảnh</th>
-                                            <th>CMND</th>
-                                            <th>Verify</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className='text-center'>
-                                        {listShipper.map(s =>
-                                            <tr key={s.id}>
-                                                <td className='pt-3'>{s.id}</td>
-                                                {listUser.filter(u => u.id === s.user).map(u => <td className='pt-3'>{u.last_name} {u.first_name}</td>)}
-                                                <td>
-                                                    <img src={s.avatar} alt="avatar" class="rounded-circle me-2" style={{ width: "50px", height: "50px", objectFit: "cover" }} />
-                                                </td>
-                                                <td className='pt-3'>{s.CMND}</td>
-                                                <td className='pt-3'>{s.already_verify ? <VscCheck /> : <VscChromeClose />}</td>
-                                                <td className='pt-3'>
-                                                    {s.already_verify ? <Button variant="outline-danger" onClick={() => unVerify(s.id)} >Bỏ xác nhận</Button> : <Button variant="outline-success" onClick={() => verify(s.id)} >Xác nhận</Button>}
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </div>
-                            <div className="bg-white p-4 rounded shadow mt-4" style={{ width: "70%" }}>
                                 <h3 class="text-center pb-4">Nhân viên giao hàng chưa được xác nhận</h3>
                                 <Table striped bordered hover>
                                     <thead className='text-center'>
@@ -151,6 +120,37 @@ function ShipperAdmin() {
                                                 <td className='pt-3'>{s.already_verify ? <VscCheck /> : <VscChromeClose />}</td>
                                                 <td className='pt-3'>
                                                     <Button variant="outline-success" onClick={() => verify(s.id)} >Xác nhận</Button>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </Table>
+                            </div>
+                            <div className="bg-white p-4 rounded shadow mt-4" style={{ width: "70%" }}>
+                                <h3 class="text-center pb-4">Danh sách tất cả nhân viên giao hàng</h3>
+                                <Table striped bordered hover>
+                                    <thead className='text-center'>
+                                        <tr>
+                                            <th>Id</th>
+                                            <th>Tên nhân viên</th>
+                                            <th>Hình ảnh</th>
+                                            <th>CMND</th>
+                                            <th>Verify</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className='text-center'>
+                                        {listShipper.map(s =>
+                                            <tr key={s.id}>
+                                                <td className='pt-3'>{s.id}</td>
+                                                {listUser.filter(u => u.id === s.user).map(u => <td className='pt-3'>{u.last_name} {u.first_name}</td>)}
+                                                <td>
+                                                    <img src={s.avatar} alt="avatar" class="rounded-circle me-2" style={{ width: "50px", height: "50px", objectFit: "cover" }} />
+                                                </td>
+                                                <td className='pt-3'>{s.CMND}</td>
+                                                <td className='pt-3'>{s.already_verify ? <VscCheck /> : <VscChromeClose />}</td>
+                                                <td className='pt-3'>
+                                                    {s.already_verify ? <Button variant="outline-danger" onClick={() => unVerify(s.id)} >Bỏ xác nhận</Button> : <Button variant="outline-success" onClick={() => verify(s.id)} >Xác nhận</Button>}
                                                 </td>
                                             </tr>
                                         )}

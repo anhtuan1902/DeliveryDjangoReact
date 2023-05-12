@@ -27,6 +27,7 @@ function App() {
           <Route path='/admin/shippers' element={<ShipperAdmin />} />
           <Route path='/shippers/:shipperId' element={<ShipperDetail />} />
           <Route path='/orders' element={<Orders />} />
+          <Route path='*' element={<div className='alert alert-info m-1'>Comming soon...</div>} />
         </Routes>
       </BrowserRouter>
     </UserContext.Provider>
