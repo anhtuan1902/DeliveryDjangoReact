@@ -4,6 +4,7 @@ import API, { authAPI, endpoints } from '../configs/API'
 import { UserContext } from '../configs/MyContext'
 import Loading from '../layouts/Loading'
 import { VscEllipsis, VscIndent } from "react-icons/vsc";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 
 const Poster = () => {
     const [show, setShow] = useState(false);
@@ -227,28 +228,28 @@ const Poster = () => {
 
         const process = async () => {
             setStatus('')
-            if (window.confirm("Bạn chắc chắn xác nhận?") === true) {
-                try {
-                    let formOrder = new FormData()
-                    formOrder.append('delivery', a.delivery)
-                    formOrder.append('customer', p.customer)
-                    let amount = a.price - (a.price * discounts.filter(d => d.id === p.discount).map(d => {return d.discount_percent}))/100
-                    formOrder.append('amount', amount)
-                    let res = await authAPI().post(endpoints['add-order'](a.id), formOrder)
-                    let formAuction = new FormData()
-                    formAuction.append('had_accept', true)
-                    await authAPI().patch(endpoints['action-auction'](a.id), formAuction)
-                    let formPost = new FormData()
-                    formPost.append('active', false)
-                    await authAPI().patch(endpoints['action-post'](p.id), formPost)
-                    setStatus(res.status)
-                } catch (ex) {
-                    alert(ex)
-                } finally {
-                    setLoading(false)
 
-                }
+            try {
+                let formOrder = new FormData()
+                formOrder.append('delivery', a.delivery)
+                formOrder.append('customer', p.customer)
+                let amount = a.price - (a.price * discounts.filter(d => d.id === p.discount).map(d => { return d.discount_percent })) / 100
+                formOrder.append('amount', amount)
+                let res = await authAPI().post(endpoints['add-order'](a.id), formOrder)
+                let formAuction = new FormData()
+                formAuction.append('had_accept', true)
+                await authAPI().patch(endpoints['action-auction'](a.id), formAuction)
+                let formPost = new FormData()
+                formPost.append('active', false)
+                await authAPI().patch(endpoints['action-post'](p.id), formPost)
+                document.getElementById(`close${a.id}`).click()
+                setStatus(res.status)
+            } catch (ex) {
+                alert(ex)
+            } finally {
+                setLoading(false)
             }
+
         }
 
         setLoading(true)
@@ -378,7 +379,7 @@ const Poster = () => {
                                 {p.description ? <p>{p.description}</p> : <p></p>}
                                 <p>Các bạn hãy ra giá $$$ </p>
                                 <img src={p.product_img} alt={p.product_name}
-                                    className="img-fluid rounded align-items-center w-100" style={{height:"600px"}} />
+                                    className="img-fluid rounded align-items-center w-100" style={{ height: "600px" }} />
                             </div>
                             <div className="post__comment mt-3 position-relative">
                                 <div className="accordion" id="accordionExample">
@@ -411,7 +412,46 @@ const Poster = () => {
                                                                             Giá đưa ra: {a.price}
                                                                         </p>
                                                                     </div>
-                                                                    {p.customer === infoUser.id ? <Button variant="outline-secondary" disabled={false} onClick={() => addOrders(p, a)}>Chọn</Button> : <></>}
+                                                                    {p.customer === infoUser.id ? <>
+                                                                    
+                                                                        <button type="button" class="btn mt-4 btn-secondary py-2" data-bs-toggle="modal" data-bs-target={`#exampleModal${a.id}`}>
+                                                                            Chọn
+                                                                        </button>
+                                                                        <div class="modal fade" id={`exampleModal${a.id}`} tabindex={`-${a.id}`} aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                                            <div class="modal-dialog">
+                                                                                <div class="modal-content">
+                                                                                    <div class="modal-header">
+                                                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Thanh Toán</h1>
+                                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                                    </div>
+                                                                                    <div class="modal-body">
+                                                                                        <PayPalScriptProvider options={{ "client-id": "AV_tj3MtCi-9oFzwmx4QnYo0pPOLBsmSsVUplLqr-psv9-u6sZ57XOVOuZqetAgDx5v-I5mC5cKiw4wH" }}>
+                                                                                            <PayPalButtons
+                                                                                                createOrder={(data, actions) => {
+                                                                                                    return actions.order.create({
+                                                                                                        purchase_units: [
+                                                                                                            {
+                                                                                                                amount: {
+                                                                                                                    value: `${parseInt(a.price) * 0.00004}`,
+                                                                                                                },
+                                                                                                            },
+                                                                                                        ],
+                                                                                                    });
+                                                                                                }}
+                                                                                                onApprove={async (data, actions) => {
+                                                                                                    addOrders(p, a);
+                                                                                                    alert("Transaction completed");
+                                                                                                    
+                                                                                                }} />
+                                                                                        </PayPalScriptProvider>
+                                                                                    </div>
+                                                                                    <div class="modal-footer">
+                                                                                        <button type="button" id={`close${a.id}`} class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </> : <></>}
                                                                 </div>
                                                             )
                                                         }) :

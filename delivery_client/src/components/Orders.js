@@ -56,7 +56,7 @@ function Orders() {
       }
     }
     loadListOrder()
-  }, [status])
+  }, [])
 
   useEffect(() => {
     const loadPoster = async () => {
@@ -131,7 +131,7 @@ function Orders() {
                 <Table striped bordered hover>
                   <thead className='text-center'>
                     <tr>
-                      <th>Id</th>
+                      <th>Mã đơn hàng</th>
                       <th>Mã sản phẩm</th>
                       <th>Số tiền</th>
                       <th>Địa chỉ nhận</th>
@@ -153,7 +153,7 @@ function Orders() {
                           {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
                           {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
                           <td className='pt-3'>
-                            <Form.Select value={statusOrder} onChange={(evt) => setStatusOrder(evt.target.value)}>
+                            <Form.Select onChange={(evt) => setStatusOrder(evt.target.value)}>
                               {o.status_order === 'CONFIRM' ? <option>Xác nhận</option> : <option>Đang giao hàng</option>}
                               <option value="CANCEL">Hủy</option>
                               <option value="CONFIRM">Xác nhận</option>
@@ -179,7 +179,7 @@ function Orders() {
                 <Table striped bordered hover>
                   <thead className='text-center'>
                     <tr>
-                      <th>Id</th>
+                      <th>Mã đơn hàng</th>
                       <th>Mã sản phẩm</th>
                       <th>Số tiền</th>
                       <th>Địa chỉ nhận</th>
@@ -237,7 +237,7 @@ function Orders() {
                 <Table striped bordered hover>
                   <thead className='text-center'>
                     <tr>
-                      <th>Id</th>
+                      <th>Mã đơn hàng</th>
                       <th>Mã sản phẩm</th>
                       <th>Số tiền</th>
                       <th>Địa chỉ nhận</th>
@@ -295,7 +295,7 @@ function Orders() {
                 <Table striped bordered hover>
                   <thead className='text-center'>
                     <tr>
-                      <th>Id</th>
+                      <th>Mã đơn hàng</th>
                       <th>Mã sản phẩm</th>
                       <th>Số tiền</th>
                       <th>Địa chỉ nhận</th>
@@ -315,7 +315,7 @@ function Orders() {
                         {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.from_address}</td>))}
                         {auctions.filter(a => a.id === o.auction).map(a => posters.filter(p => p.id === a.post).map(p => <td className='pt-3'>{p.to_address}</td>))}
                         <td className='pt-3'>
-                          <Form.Select value={statusOrder} onChange={(evt) => setStatusOrder(evt.target.value)}>
+                          <Form.Select onChange={(evt) => setStatusOrder(evt.target.value)}>
                             {o.status_order === 'CONFIRM' ? <option>Xác nhận</option> : o.status_order === 'DELIVERING' ? <option >Đang giao hàng</option> :
                               o.status_order === 'RECEIVED' ? <option >Đã giao hàng</option> : <option >Hủy</option>}
                             <option value="CANCEL">Hủy</option>

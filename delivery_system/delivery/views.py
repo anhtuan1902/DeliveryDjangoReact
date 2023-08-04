@@ -127,6 +127,15 @@ class OrderViewSet(viewsets.ViewSet, generics.ListAPIView, generics.UpdateAPIVie
 
     def partial_update(self, request, *args, **kwargs):
         if request.user == self.get_object().shipper.user or request.user.user_role == "ADMIN_ROLE":
+            o = Order.objects.get(pk=self.kwargs['pk'])
+
+            c = Customer.objects.get(pk=o.customer_id)
+
+            subject = 'CẬP NHẬT ĐƠN HÀNG'
+            message = f'Chào {c.user.last_name},\nĐơn hàng của bạn đã được cập nhật mới vui lòng kiểm tra.\nTrạng thái hiện tại là {request.data["status_order"]}\nCám ơn'
+            email_from = settings.EMAIL_HOST_USER
+            recipient_list = [c.user.email, ]
+            send_mail(subject, message, email_from, recipient_list)
             return super().partial_update(request, *args, **kwargs)
 
         return Response(status=status.HTTP_403_FORBIDDEN)
